@@ -4,6 +4,7 @@
     <uses-permission android:name="ru.evotor.permission.receipt.printExtra.SET" />
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
+        android:name=".Application"
         android:largeHeap="true"
         android:hardwareAccelerated="true"
         android:allowBackup="true"
