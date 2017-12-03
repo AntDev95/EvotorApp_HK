@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.text.TextUtils;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -22,6 +23,10 @@ import java.util.zip.GZIPInputStream;
 
 import ru.evotor.app.Application;
 import ru.evotor.app.DispatchQueue;
+import ru.evotor.app.Helper;
+import ru.evotor.devices.commons.DeviceServiceConnector;
+import ru.evotor.devices.commons.printer.PrinterDocument;
+import ru.evotor.devices.commons.printer.printable.PrintableImage;
 
 
 public class API {
@@ -78,7 +83,7 @@ public class API {
         });
     }
 
-    private String httpEngine(String url, String body, int attempt) {
+    private String httpEngine(final String url, String body, int attempt) {
         attempt++;
         HttpURLConnection connection = null;
         try {
@@ -100,40 +105,18 @@ public class API {
                 is = new GZIPInputStream(is);
             }
             final String result = streamToString(is);
-            Application.runOnUIThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(Application.context, result, Toast.LENGTH_SHORT).show();
-                }
-            });
             if (TextUtils.isEmpty(result)) {
                 try { Thread.sleep(3000); } catch (Throwable ignored) { }
                 return httpEngine(url, body, 0);
             }
             return result;
         } catch (final Throwable e) {
-            Application.runOnUIThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(Application.context, String.valueOf(e), Toast.LENGTH_SHORT).show();
-                }
-            });
             if (connection != null) {
                 try {
                     connection.disconnect();
                 } catch (Throwable ignore){ }
             }
-            if (e instanceof InterruptedIOException) {
-                return null;
-            }
-            if (e instanceof UnknownHostException) {
-                try { Thread.sleep(5000); } catch (Throwable ignored) { }
-            }
-            try { Thread.sleep(3000); } catch (Throwable ignored) { }
-            if (attempt >= 7) {
-                return null;
-            }
-            return httpEngine(url, body, attempt);
+            return attempt >= 7 ? null : httpEngine(url, body, attempt);
         }
     }
 
@@ -153,41 +136,6 @@ public class API {
         }
         return String.valueOf(sw);
     }
-
-    /* public String httpEngine(String url, String params, int attempt) {
-        attempt++;
-        if (attempt > 5) {
-            return null;
-        }
-        try {
-            RequestBody body = RequestBody.create(null, params);
-            Request request = new Request.Builder()
-                    .url(url)
-                    .post(body)
-                    .build();
-            final Response response = client.newCall(request).execute();
-            ResponseBody res = response.body();
-            if (res == null) {
-                return null;
-            }
-            final String text = res.string();
-            Application.runOnUIThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(Application.context, response.code() + "=" + text, Toast.LENGTH_SHORT).show();
-                }
-            });
-            return text;
-        } catch (final Throwable e) {
-            Application.runOnUIThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(Application.context, String.valueOf(e), Toast.LENGTH_SHORT).show();
-                }
-            });
-            return httpEngine(url, params, attempt);
-        }
-    } */
 
     public static API getInstance() {
         API localInstance = Instance;

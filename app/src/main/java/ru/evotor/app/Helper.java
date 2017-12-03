@@ -1,5 +1,11 @@
 package ru.evotor.app;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.util.Random;
 
@@ -30,4 +36,18 @@ public class Helper {
         } catch (Throwable ignored) {}
         return "kek";
     }
+
+    public static Bitmap getBitmapFromURL(String src) {
+        try {
+            URL url = new URL(src);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            return BitmapFactory.decodeStream(input);
+        } catch (Throwable e) {
+            return null;
+        }
+    }
+
 }
